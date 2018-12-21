@@ -82,31 +82,32 @@ client.createDatabaseNotExists().then(data => {
 
 /* 读数据 */
 const reader = client.query(table);
-// reader.tag('spdy', "2");
-// reader.tag('type', "3");
-reader.addCondition('use > 200');
-reader.addCondition('use < 500');
-// reader.addGroup('time(5m)');
-reader.add
-reader.slimit = 5;
-reader.limit = 50;
-reader.start = '2018-12-19';
-reader.end = '-3h';
+reader.addField('use','code');
+// reader.addCondition('use > 200');
+// reader.addCondition('use < 500');
+// reader.condition('use',397);   
+reader.addGroup('spdy','type');
+reader.tag('spdy', "2");
+reader.tag('type', "3");
+// reader.slimit = 5;
+// reader.limit = 50;
+//  reader.start = '-3h';
+// reader.start = '2018-12-19 13:00:00';
+// reader.end = '-3h';
+// reader.addCalculate('count', 'use'); /* 值数量 */
+// reader.addCalculate('DISTINCT', 'use'); /* 值集合 */
+// reader.addCalculate('MEAN', 'use'); /* 值的平均值 */
+// reader.addCalculate('SUM', 'use'); /* 值的总和 */
+// reader.addCalculate('SPREAD', 'use'); /* 差值 */
+//  reader.addCalculate('BOTTOM','use,3'); 
+reader.fill = 0;
 reader.then(data => {
-    console.info("list",data.results[0].series[0].values);
+    console.info("list",JSON.stringify(data));
   }).catch(err => {
     console.error(err);
   });
 
-// const ql = new QL('test');
-// ql.measurement = 'table';
-// ql.where('type', "2");
-// // ql.clean();
-// console.log('ql',ql.toSelect())
+
 client.startHealthCheck();
-// custom ping function
-client.startHealthCheck((backend, cb) => {
-  // the backend fail if callback with error
-  setTimeout(cb, 10); 
-});
+
 
