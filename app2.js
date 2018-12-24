@@ -1,8 +1,11 @@
+var express = require('express');
+var app = express();
+
 const _ = require('lodash');
 const Influx = require('influxdb-nodejs');
 const QL = require('influx-ql');
-//const client = new Influx('http://root:root@192.168.1.150:8086,192.168.1.151:8086,192.168.1.152:8086/test');
- const client = new Influx('http://dxl:123456@149.129.97.226:8086/test');
+const client = new Influx('http://root:root@192.168.1.150:8086,192.168.1.151:8086,192.168.1.152:8086/test');
+//  const client = new Influx('http://dxl:123456@149.129.97.226:8086/test');
 client.epoch = 'ms';
 client.timeout = 2000;
 client.format = 'json';
@@ -12,45 +15,45 @@ const table = 'table';
 //  .then(() => console.info('drop database success'))
 //  .catch(err => console.error(`drop database fail, ${err.message}`));
 
-client.showDatabases()
-    .then(data => {
-        console.info('showDatabases:', data.results[0].series[0].values);
-    })
-    .catch(err => {
-        console.error('showDatabases:', err);
-    });
-client.showMeasurements()
-    .then(data => {
-        console.info('showMeasurements:', data.results[0].series[0].values);
-    })
-    .catch(err => {
-        console.error('showMeasurements:', err);
-    });
-client.showRetentionPolicies()
-    .then(data => {
-        console.info('showRetentionPolicies:', data.results[0].series[0].values);
-    })
-    .catch(err => {
-        console.error('showRetentionPolicies:', err);
-    });
-client.showTagKeys(table)
-    .then(data => {
-        console.info('showTagKeys:', data.results[0].series[0].values);
-    }).catch(err => {
-        console.error('showTagKeys:', err);
-    });
-client.showFieldKeys(table)
-    .then(data => {
-        console.info('showFieldKeys:', data.results[0].series[0].values);
-    }).catch(err => {
-        console.error('showFieldKeys:', err);
-    });
-client.showSeries(table)
-    .then(data => {
-        console.info('showSeries:', data.results[0].series[0].values);
-    }).catch('showSeries', err => {
-        console.error('showSeries:', err);
-    });
+// client.showDatabases()
+//     .then(data => {
+//         console.info('showDatabases:', data.results[0].series[0].values);
+//     })
+//     .catch(err => {
+//         console.error('showDatabases:', err);
+//     });
+// client.showMeasurements()
+//     .then(data => {
+//         console.info('showMeasurements:', data.results[0].series[0].values);
+//     })
+//     .catch(err => {
+//         console.error('showMeasurements:', err);
+//     });
+// client.showRetentionPolicies()
+//     .then(data => {
+//         console.info('showRetentionPolicies:', data.results[0].series[0].values);
+//     })
+//     .catch(err => {
+//         console.error('showRetentionPolicies:', err);
+//     });
+// client.showTagKeys(table)
+//     .then(data => {
+//         console.info('showTagKeys:', data.results[0].series[0].values);
+//     }).catch(err => {
+//         console.error('showTagKeys:', err);
+//     });
+// client.showFieldKeys(table)
+//     .then(data => {
+//         console.info('showFieldKeys:', data.results[0].series[0].values);
+//     }).catch(err => {
+//         console.error('showFieldKeys:', err);
+//     });
+// client.showSeries(table)
+//     .then(data => {
+//         console.info('showSeries:', data.results[0].series[0].values);
+//     }).catch('showSeries', err => {
+//         console.error('showSeries:', err);
+//     });
 
 /* 写数据 */
 client.createDatabaseNotExists().then(data => {
@@ -86,7 +89,7 @@ reader.addField('use','code');
 // reader.addCondition('use > 200');
 // reader.addCondition('use < 500');
 // reader.condition('use',397);   
-reader.addGroup('spdy','type');
+// reader.addGroup('spdy','type');
 reader.tag('spdy', "2");
 reader.tag('type', "3");
 // reader.slimit = 5;
@@ -101,13 +104,24 @@ reader.tag('type', "3");
 // reader.addCalculate('SPREAD', 'use'); /* 差值 */
 //  reader.addCalculate('BOTTOM','use,3'); 
 reader.fill = 0;
-reader.then(data => {
-    console.info("list",JSON.stringify(data));
-  }).catch(err => {
-    console.error(err);
-  });
-
 
 client.startHealthCheck();
 
+app.get('/', function (req, res) {
+    reader.then(data => {
+        console.info("list",JSON.stringify(data));
+        res.send(data);
+      }).catch(err => {
+        console.error(err);
+      });
+ })
+
+var server = app.listen(8081, function () {
+ 
+  var host = server.address().address
+  var port = server.address().port
+ 
+  console.log("http:/127.0.0.1:%s",  port)
+ 
+})
 
