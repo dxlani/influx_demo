@@ -10,11 +10,13 @@
   "author": "dxl",
   "license": "ISC",
   "devDependencies": {
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "influx": "4.2.0",
     "influxdb-nodejs": "1.0.0",
     "lodash": "^4.17.11",
-    "nodemon": "^1.18.9"
+    "nodemon": "^1.18.9",
+    "socket.io": "^1.7.2"
   },
   "dependencies": {
     "uglify-js": "^3.4.9"

@@ -137,3 +137,25 @@ client.query('select * from test', function (err, response) {
 //MAX(value) value字段最大的取值
 //PERCENTILE(value,N) value字段值介于N%，N[0,100]
 //DERIVATIVE(value,T) value字段值连续的时间值之间的差异
+app.all('*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("Content-Type", "application/json;charset=utf-8");
+  next();
+})
+app.get('/', function (req, res) {
+  reader.then(data => {
+      console.log("list",JSON.stringify(data));
+      res.send(data);
+    }).catch(err => {
+      console.error(err);
+    });
+})
+
+
+var server = app.listen(2019,()=>{
+  var host = server.address().address;
+   var port = server.address().port;
+      console.log('demo listening at http://%s:%s', host, port);
+})
