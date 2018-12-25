@@ -10,52 +10,54 @@ client.timeout = 5000;
 client.format = 'json';
 console.info(client.epoch, client.format, client.timeout);
 const table = 'cpu';
+var startTime="-10m"
 var start=""
 client.startHealthCheck();
 
  io.of('/cpu').on('connection', (socket)=>{
+   /* 时间段事件 */
     socket.on('cpu start', (msg)=>{
       console.log("msgTime",msg);
       start=msg;
       });
    /* 首次连接发送数据 */
+    getCpuInfo(startTime,(data)=>{
+      socket.emit('cpu message', data);
+    })
+   /* 循环发送 */
    setInterval(()=>{
-    var reader = client.query(table);
-    reader.start = "-30m";
-    reader.addCalculate('MEAN', 'usage_iowait'); 
-    reader.addCalculate('MEAN', 'usage_user');
-    reader.addGroup('time(10s)');
-    reader.fill = '0';
-    reader.then(data => {
-        console.log("send message success");
-        socket.emit('cpu message', data);
-      }).catch(err => {
-        console.error(err);
-      });
+    getCpuInfo(startTime,(data)=>{
+      socket.emit('cpu message', data);
+    })
   },5000)
-   
+    
+  console.log('socket.id',socket.id)
+  if (io.of('/cpu').connected[socket.id]) {
+    io.of('/cpu').connected[socket.id].emit('message',socket.id);
+}
 });
- 
-
-  function getCpuInfo(){
+io.of('/cpu').on('disconnect',function(){
+  console.log('用户已离开')
+  startTime="-10m"
+  start=""
+})
+  function getCpuInfo(startTime,cb){
     var reader = client.query(table);
-    reader.start = start;
+    if (startTime!=start && start!=""){
+      startTime=start;
+    }
+    reader.start = startTime;
     reader.addCalculate('MEAN', 'usage_iowait'); 
     reader.addCalculate('MEAN', 'usage_user');
     reader.addGroup('time(10s)');
     reader.fill = '0';
     reader.then(data => {
-        console.log("send message success");
-        socket.emit('cpu message', data);
+        // console.log("send message success");
+        cb(data);
       }).catch(err => {
         console.error(err);
       });
   }
-//  var server = app.listen(2019,()=>{
-//     var host = server.address().address;
-//      var port = server.address().port;
-//         console.log('demo listening at http://%s:%s', host, port);
-// })
 server.listen(2019, function(){
   console.log('socket listening on *:2019');
 });
