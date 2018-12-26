@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const socketioJwt = require('socketio-jwt');
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+app.use(bodyParser.text());
 //设置静态资源
 app.use(express.static("dist"))
 
@@ -33,11 +34,8 @@ app.use('*', function(req, res, next) {
 })
 
 app.post('/wslogin', function (req, res) {
-  // console.log('req',req)
-  var profile = {
-    userName: 'dxl',
-    password: '123456',
-  };
+  var profile=req.body
+  console.log('profile',profile)
   // 将用户信息加密在令牌内
   const jwtSecret="dingxiaolin_secret"
   var token = jwt.sign(profile, jwtSecret, { expiresIn: "7d" });
