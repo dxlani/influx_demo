@@ -1,12 +1,10 @@
 const express = require('express');
 const app = express();
-// const router=require('express').Router();
 const server=require('http').createServer(app);
 const jwt = require('jsonwebtoken');
 const socketioJwt = require('socketio-jwt');
-// const bodyParser = require('body-parser');
-// app.use(bodyParser.json());
-// app.use(bodyParser.text());
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 //设置静态资源
 app.use(express.static("dist"))
 
@@ -41,8 +39,8 @@ app.post('/wslogin', function (req, res) {
     password: '123456',
   };
   // 将用户信息加密在令牌内
-  var jwtSecret="abcdefg"
-  var token = jwt.sign(profile, jwtSecret, { expiresIn: 60*5 });
+  const jwtSecret="dingxiaolin_secret"
+  var token = jwt.sign(profile, jwtSecret, { expiresIn: "7d" });
   res.send({
     errorMessage:null,
     errorCode:null,
@@ -59,18 +57,18 @@ client.epoch = 'ms';
 client.timeout = 60000;
 client.format = 'json';
 const table = 'cpu';
-var startTime="-10m"
+var startTime="-30m";
 client.startHealthCheck();
 // 设置socket的session验证
 io.of('/cpu').use(socketioJwt.authorize({
-  secret: 'jwtSecret',
+  secret: "dingxiaolin_secret",
   handshake: true
 }));
+//中间件
 io.of('/cpu').use(function (socket, next) {
-  next();
   /* 这里需要加个数据库校验用户名是否存在 */
-  if (socket.decoded_token.userName=="dxl") {
-    console.log( 'connected');
+  if (socket.decoded_token.userName) {
+    console.info(socket.decoded_token.userName+'用户已连接');
     next();
   } else {
     return next(new Error('Missing user'));
@@ -80,11 +78,21 @@ io.of('/cpu').use(function (socket, next) {
  io.of('/cpu').on('connection', (socket)=>{
     /* 用户关闭浏览器 */
     socket.on('disconnect', function(){
-      console.log('用户已离开');
-      clearInterval(timer)
+      startTime="-30m";
+      console.info(socket.decoded_token.userName+'用户已离开');
+      clearInterval(timer);
+    });
+    /* 接收用户操作 */
+    socket.on('cpu circletime', function(msg){
+      console.log("msg",msg)
+      startTime=msg;
+      getCpuInfo(startTime,(data)=>{
+        socket.emit('cpu message', data);
+      })
     });
    /* 首次连接发送数据 */
     getCpuInfo(startTime,(data)=>{
+      startTime="-30m";
       socket.emit('cpu message', data);
     })
    /* 循环发送 */
@@ -119,6 +127,10 @@ io.of('/cpu').use(function (socket, next) {
         console.error(err);
       });
   }
-  app.listen(2019, function(){
+  app.listen(2018, function(){
+  // console.log('listening on http://localhost:2018');
+  /* 是否能监听同一个端口呢？ */
+  });
+  server.listen(2019, function(){
   console.log('listening on http://localhost:2019');
-});
+  });
