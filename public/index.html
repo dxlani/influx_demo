@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>可视化</title>
+  <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdn.staticfile.org/angular.js/1.6.3/angular.min.js"></script>
+  <script src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+  <script src="https://cdn.bootcss.com/socket.io/2.2.0/socket.io.js"></script>
+  <!-- <script src="index.js"></script> -->
+</head>
+
+<body ng-app="myApp" ng-controller="siteCtrl">
+  <select name="cicletime"  ng-model="cicletime" ng-change="changeTime()">
+    <option value="-30m">30Min</option>
+    <option value="-1h">1h</option>
+    <option value="-4h">4h</option>
+  </select> 
+  <div id="main" style="width: 100%;height:500px;"></div>
+
+  <script type="text/javascript">
+    var app = angular.module('myApp', []);
+
+    app.controller('siteCtrl', function ($scope, $http) {
+      $scope.cicletime = "-30m";
+      $scope.cpu = null;
+      /* 登录 */
+      async function login() {
+        let res = await $http({
+          method: 'post',
+          url: 'http://127.0.0.1:2018/wslogin',
+          data: {
+            userName: 'dxl',
+            password: '123456',
+          }
+        })
+        return res.data.data.token;
+      }
+      login().then(res => {
+        getCPUInfo(res);
+      })
+     
+      function getCPUInfo(token) {
+        console.log("token",token)
+         /* 订阅CPU */
+         $scope.cpu = io('ws://127.0.0.1:2019/cpu', {
+          transports: ['websocket', 'polling'],
+          reconnect: true,
+          query: 'token=' + token
+        })
+        /* 连接异常 */
+        $scope.cpu.on('error', function (data) {
+          console.log("error", data);
+          alert(data.message);
+        });
+        /* 连接成功 */
+        $scope.cpu.on('connect', function (data) {
+          console.log('连接成功');
+          Message();
+        });
+        /* 连接断开 */
+        $scope.cpu.on('disconnect', function (data) {
+          console.log('连接断开', data); // transport close
+          if (data == "transport close") { }
+        });
+        /* 获取订阅信息 */
+        function Message() {
+          $scope.cpu.on('cpu message', (msg) => {
+            $scope.time = [];
+            $scope.iowait = [];
+            $scope.user = [];
+            msg.results[0].series[0].values.forEach(item => {
+              $scope.option = {
+                title: {
+                  text: 'cpu'
+                },
+                tooltip: {
+                  trigger: 'axis'
+                },
+                legend: {
+                  data: ['usage_iowait', 'usage_user']
+                },
+                xAxis: {
+                  type: 'category',
+                  boundaryGap: false,
+                  data: []
+                },
+                yAxis: {
+                  type: 'value'
+                },
+                series: [
+                  {
+                    name: 'usage_iowait',
+                    data: $scope.iowait,
+                    type: 'line',
+                    smooth: true
+                  },
+                  {
+                    name: 'usage_user',
+                    data: $scope.user,
+                    type: 'line',
+                    smooth: true
+                  },
+                ]
+              };
+              $scope.iowait.push(item[1]);
+              $scope.user.push(item[2]);
+              $scope.time.push(new Date(item[0]).toLocaleTimeString());
+              $scope.option.xAxis.data = $scope.time;//给X轴
+            });
+            var myChart = echarts.init(document.getElementById('main'));
+            myChart.setOption($scope.option, true);
+            
+          });
+        }
+      }
+
+      $scope.changeTime=function(){
+        $scope.cpu.emit('cpu circletime',$scope.cicletime);
+      }
+    });
+
+  </script>
+</body>
+
+</html>

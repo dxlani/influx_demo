@@ -7,14 +7,14 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 //设置静态资源
-app.use(express.static("dist"))
+app.use(express.static("./public"))
 
 const Influx = require('influxdb-nodejs');
-const redis = require("redis"),
-redisClient = redis.createClient();
-redisClient.on("error", function (err) {
-  console.log("redisError " + err);
-});
+// const redis = require("redis"),
+// redisClient = redis.createClient();
+// redisClient.on("error", function (err) {
+//   console.log("redisError " + err);
+// });
 
 const io=require('socket.io')(server,{
   path: '/',
@@ -126,9 +126,9 @@ io.of('/cpu').use(function (socket, next) {
       });
   }
   app.listen(2018, function(){
-  // console.log('listening on http://localhost:2018');
+   console.log('listening on http://localhost:2018');
   /* 是否能监听同一个端口呢？ */
   });
   server.listen(2019, function(){
-  console.log('listening on http://localhost:2019');
+  //console.log('listening on http://localhost:2019');
   });
