@@ -4,8 +4,8 @@
   "description": "v0.11 influx test",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon app3.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nodemon app3.js",
+    "start": "pm2 start app3.js --no-daemon"
   },
   "author": "dxl",
   "license": "ISC",
