@@ -30,7 +30,8 @@
       async function login() {
         let res = await $http({
           method: 'post',
-          url: 'http://127.0.0.1:2019/wslogin',
+          // url: 'http://127.0.0.1:2019/wslogin',
+          url: '/wslogin',
           data: {
             userName: 'dxl',
             password: '123456',
@@ -45,7 +46,8 @@
       function getCPUInfo(token) {
         console.log("token",token)
          /* 订阅CPU */
-         $scope.cpu = io('ws://127.0.0.1:2019/cpu', {
+        //  $scope.cpu = io('ws://127.0.0.1:2019/cpu', {
+         $scope.cpu = io('/cpu', {
           transports: ['websocket', 'polling'],
           reconnect: true,
           query: 'token=' + token
