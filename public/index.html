@@ -30,7 +30,7 @@
       async function login() {
         let res = await $http({
           method: 'post',
-          url: 'http://coinpot.cn:2018/wslogin',
+          url: 'http://127.0.0.1:2019/wslogin',
           data: {
             userName: 'dxl',
             password: '123456',
@@ -45,7 +45,7 @@
       function getCPUInfo(token) {
         console.log("token",token)
          /* 订阅CPU */
-         $scope.cpu = io('ws://coinpot.cn:2019/cpu', {
+         $scope.cpu = io('ws://127.0.0.1:2019/cpu', {
           transports: ['websocket', 'polling'],
           reconnect: true,
           query: 'token=' + token
@@ -60,11 +60,16 @@
           console.log('连接成功');
           Message();
         });
+        /* 连接失败 */
+        $scope.cpu.on('connect_failed', function (data) {
+          console.log('连接失败');
+        });
         /* 连接断开 */
         $scope.cpu.on('disconnect', function (data) {
           console.log('连接断开', data); // transport close
           if (data == "transport close") { }
         });
+     
         /* 获取订阅信息 */
         function Message() {
           $scope.cpu.on('cpu message', (msg) => {
@@ -119,7 +124,8 @@
 
       $scope.changeTime=function(){
         $scope.cpu.emit('cpu circletime',$scope.cicletime);
-      }
+        /* 进入房间 */
+      };
     });
 
   </script>

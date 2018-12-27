@@ -1,6 +1,5 @@
 //跨域白名单
-const express = require('express');
-const app = express();
+const router = require('./app3');
     var cors=function(){
         isOriginAllowed=(origin, allowedOrigin)=>{
             var reg=new RegExp(allowedOrigin.join("|"),"ig");   //动态生成一个正则表达式
@@ -13,12 +12,13 @@ const app = express();
          'sowl.cn',
          'jfry.cn',
          '127.0.0.1',
-         'localhost'
+         'localhost',
+         '',
         ]; 
         /**
          * 允许跨域
          */
-        app.use((req, res, next) => {
+        router.use((req, res, next) => {
               let reqOrigin = req.headers.origin; // request响应头的origin属性
                 if(isOriginAllowed(reqOrigin, ALLOW_ORIGIN)) {
                     res.header("Access-Control-Allow-Origin", reqOrigin);
@@ -27,11 +27,11 @@ const app = express();
                     res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
                     res.setHeader('Content-Type','text/javascript;charset=UTF-8'); //解决res乱码
                     next();
-                  } else {
-                      console.log('bbbbbbbbb')
-                    res.setHeader('Content-Type','text/javascript;charset=UTF-8'); //解决res乱码
+                }else{
                     next();
-                    }
+                } 
+                
+                
         });
     }
 
