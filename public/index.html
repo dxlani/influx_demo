@@ -14,6 +14,7 @@
 
 <body ng-app="myApp" ng-controller="siteCtrl">
   <select name="cicletime"  ng-model="cicletime" ng-change="changeTime()">
+    <option value="-10m">10Min</option>
     <option value="-30m">30Min</option>
     <option value="-1h">1h</option>
     <option value="-4h">4h</option>
@@ -24,7 +25,7 @@
     var app = angular.module('myApp', []);
 
     app.controller('siteCtrl', function ($scope, $http) {
-      $scope.cicletime = "-30m";
+      $scope.cicletime = "-10m";
       $scope.cpu = null;
       /* 登录 */
       async function login() {
@@ -60,6 +61,7 @@
         /* 连接成功 */
         $scope.cpu.on('connect', function (data) {
           console.log('连接成功');
+          $scope.cpu.emit('cpu circletime',$scope.cicletime);
           Message();
         });
         /* 连接失败 */
@@ -75,6 +77,7 @@
         /* 获取订阅信息 */
         function Message() {
           $scope.cpu.on('cpu message', (msg) => {
+            console.log('收到的推送消息')
             $scope.time = [];
             $scope.iowait = [];
             $scope.user = [];

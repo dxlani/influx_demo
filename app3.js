@@ -33,14 +33,6 @@ const socketIO = IO(server,{
     cookie: true
   });
 
-// app.use('*', function(req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length,Authorization,Accept,X-Requested-With,X-Request-Id");
-//   res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
-//   res.header("Content-Type", "application/json;charset=utf-8");
-//   next();
-// })
-
 router.post('/wslogin', function (req, res) {
   var profile=req.body
   console.log('profile',profile)
@@ -63,7 +55,6 @@ client.epoch = 'ms';
 client.timeout = 60000;
 client.format = 'json';
 const table = 'cpu';
-var startTime="-30m";
 client.startHealthCheck();
 // 设置socket的session验证
 socketIO.of('/cpu').use(socketioJwt.authorize({
@@ -82,39 +73,37 @@ socketIO.of('/cpu').use(function (socket, next) {
 // 建立连接
 socketIO.of('/cpu').on('connect', (socket)=>{
   console.info(socket.decoded_token.userName+'用户已连接');
-});
-//连接中
- socketIO.of('/cpu').on('connection', (socket)=>{
-    /* 用户关闭浏览器 */
-    socket.on('disconnect', function(){
-      startTime="-30m";
-      console.info(socket.decoded_token.userName+'用户已离开');
-      clearInterval(timer);
-    });
-    /* 接收用户操作 */
-    socket.on('cpu circletime', function(msg){
-      console.log("msg",msg)
-      startTime=msg;
-      getCpuInfo(startTime,(data)=>{
-        socket.emit('cpu message', data);
-      })
-    });
-   /* 首次连接发送数据 */
-    getCpuInfo(startTime,(data)=>{
-      startTime="-30m";
-      socket.emit('cpu message', data);
-    })
-   /* 循环发送 */
-   var timer=setInterval(()=>{
-    getCpuInfo(startTime,(data)=>{
-      socket.emit('cpu message', data);
-    })
-  },5000)
-  // console.log(socket.id)
   // if (socketIO.of('/cpu').connected[socket.id]) {
   //   socketIO.of('/cpu').connected[socket.id].emit('message',socket.id);
   //   redisClient.set(socket.id,['socket.id',socket.id]);
   // }
+});
+//连接中
+ socketIO.of('/cpu').on('connection', (socket)=>{
+    var startTime = [];
+    /* 用户关闭浏览器 */
+    socket.on('disconnect', function(){
+      console.info(socket.decoded_token.userName+'用户已离开,soketId:'+socket.id);
+      clearInterval(timer);
+    });
+    /* 接收用户操作/首次连接发送数据 */
+    socket.on('cpu circletime', function(msg){
+      startTime[socket.id]=msg;
+      console.log(startTime)
+      getCpuInfo(startTime[socket.id],(data)=>{
+        socket.emit('cpu message', data);
+      })
+    });
+      /* 循环发送 */
+    var timer=setInterval(()=>{
+      getCpuInfo(startTime[socket.id],(data)=>{
+        socket.emit('cpu message', data);
+      })
+    },5000)
+  if (socketIO.of('/cpu').connected[socket.id]) {
+    // socketIO.of('/cpu').to(socket.id).emit('cpu message',socket.id);
+    // socketIO.of('/cpu').connected[socket.id].emit('cpu message',socket.id);
+  }
   // redisClient.get(socket.id, function(err, reply) {
   //   console.log("reply",reply);  /* 不存在即为null */
   // }); 
@@ -130,7 +119,7 @@ socketIO.of('/cpu').on('connect', (socket)=>{
     reader.addGroup('time(10s)');
     reader.fill = '0';
     reader.then(data => {
-        // console.log(new Date+"send message success");
+        console.log(new Date+"send message success",startTime);
         cb(data);
       }).catch(err => {
         console.error(err);
